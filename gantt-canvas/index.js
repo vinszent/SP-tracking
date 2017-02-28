@@ -15,7 +15,7 @@ function GanttCanvas(id) {
         labelSpacing: 10
     };
 
-    // ctxt.font = "30px Arial";
+    ctxt.textBaseline = "middle";
 
     function layout() {
         var width = 0;
