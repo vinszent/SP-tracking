@@ -11,7 +11,8 @@ function GanttCanvas(id) {
         rowHeight: 20,
         rowSpacing: 10,
         cellSize: 2,
-        timeInterval: 200
+        timeInterval: 200,
+        labelSpacing: 10
     };
 
     // ctxt.font = "30px Arial";
@@ -56,7 +57,7 @@ function GanttCanvas(id) {
                           selfGantt.options.rowHeight / 2);
 
             ctxt.fillStyle = row.colour;
-            ctxt.fillRect(row.textWidth, row.position*(selfGantt.options.rowHeight + selfGantt.options.rowSpacing),
+            ctxt.fillRect(row.textWidth + selfGantt.options.labelSpacing, row.position*(selfGantt.options.rowHeight + selfGantt.options.rowSpacing),
                           row.width, selfGantt.options.rowHeight);
             ctxt.fillStyle = "black";
 
