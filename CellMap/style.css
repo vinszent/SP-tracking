@@ -1,0 +1,28 @@
+#dipslaydiv {
+	max-height: 400;
+}
+
+#mapcanvas {
+	//display: inline-block;
+	float: left;
+	border: 1px solid;
+
+}
+
+#selectionmenu {
+	display: inline-block;
+}
+
+.menubutton {
+	background-color: lightblue;
+	padding: 2px;
+	cursor: pointer;
+	user-select: none;
+	-moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+}
+
+.datadiv {
+	display: inline-block;
+}
