@@ -60,7 +60,7 @@ function GanttCanvas(canvasId) {
         }
     }
 
-    GanttCanvas.prototype.addLabel = function(componentId, labelId, labelColor, labelTime) {
+    GanttCanvas.prototype.addLabel = function(componentId, labelId, labelColor, labelTime, labelIn) {
         if (typeof components[componentId] == "undefined") {
             GanttCanvas.prototype.addComponent(componentId);
         }
@@ -72,20 +72,27 @@ function GanttCanvas(canvasId) {
         }
             
         if (typeof c.labels[c.cur] == "undefined") {
-            l = new Label(labelId, labelColor);
             
-            l.times[0] = labelTime;
+            if (labelIn == "true") {
+                l = new Label(labelId, labelColor);
+                
+                l.times[0] = labelTime;
 
-            c.labels[c.cur] = l;
+                c.labels[c.cur] = l;
+                
+                console.log("Component %s entered %s.", componentId, labelId);                
+            }
             
-            console.log("Component %s entered %s.", componentId, labelId);
-            
-        } else { // Assume we have left the current label
-            c.labels[c.cur].times[1] = labelTime;
-            
-            console.log("Component %s left %s.", componentId, c.labels[c.cur].id);
+        } else {
 
-            c.cur += 1;
+            if (labelIn != "true") { // Assume we are leaving the current label
+                c.labels[c.cur].times[1] = labelTime;
+                
+                console.log("Component %s left %s.", componentId, c.labels[c.cur].id);
+
+                c.cur += 1;
+            }
+            
         }
     }
 
@@ -109,8 +116,7 @@ function GanttCanvas(canvasId) {
     clear();
 
     function draw(timestamp) {
-        if (Math.floor((timestamp - startTime) / opt.timeInterval) >= canvas.width - opt.padding - opt.labelSpacing) {
-
+        if (Math.floor((new Date().getTime() - startTime) / opt.timeInterval) >= canvas.width - opt.padding - opt.labelSpacing) {
             squish();
         }
         
@@ -131,9 +137,9 @@ function GanttCanvas(canvasId) {
 
                 } else {
                     ctx.fillStyle = l.color;
-                    ctx.fillRect(opt.padding + opt.labelSpacing + Math.floor((l.times[0] - startTime) / opt.timeInterval), opt.padding + row*(opt.rowHeight + opt.rowSpacing), Math.floor(timestamp - l.times[0]) / opt.timeInterval, opt.rowHeight);
+                    ctx.fillRect(opt.padding + opt.labelSpacing + Math.floor((l.times[0] - startTime) / opt.timeInterval), opt.padding + row*(opt.rowHeight + opt.rowSpacing), Math.floor(new Date().getTime() - l.times[0]) / opt.timeInterval, opt.rowHeight);
                     ctx.fillStyle = "black";                    
-                    ctx.fillText(l.id, opt.padding + opt.labelSpacing + Math.floor((l.times[0] - startTime) / opt.timeInterval) + opt.textPadding, opt.padding + row*(opt.rowHeight + opt.rowSpacing) + opt.rowHeight/2, Math.floor(timestamp - l.times[0]) / opt.timeInterval - opt.textPadding);
+                    ctx.fillText(l.id, opt.padding + opt.labelSpacing + Math.floor((l.times[0] - startTime) / opt.timeInterval) + opt.textPadding, opt.padding + row*(opt.rowHeight + opt.rowSpacing) + opt.rowHeight/2, Math.floor(new Date().getTime() - l.times[0]) / opt.timeInterval - opt.textPadding);
                 }
                 
             });
@@ -147,9 +153,9 @@ function GanttCanvas(canvasId) {
         ctx.fillRect(opt.padding + opt.labelSpacing, 0, 1, ctx.canvas.height);
             
         // The current time bar
-        var x = opt.padding + opt.labelSpacing + Math.floor((timestamp - startTime) / opt.timeInterval);
+        var x = opt.padding + opt.labelSpacing + Math.floor((new Date().getTime() - startTime) / opt.timeInterval);
         ctx.fillRect(x, 0, 3, ctx.canvas.height);
-        ctx.fillText((parseInt(window.performance.now() - startTime) / 1000).toFixed(1), x + 5, ctx.canvas.height - 3, ctx.canvas.width - x);
+        ctx.fillText((parseInt(new Date().getTime() - startTime) / 1000).toFixed(1), x + 5, ctx.canvas.height - 3, ctx.canvas.width - x);
     };
 
     var requestId;
@@ -179,9 +185,10 @@ function GanttCanvas(canvasId) {
     }
 
     GanttCanvas.prototype.start = function(currentTime) {
-        startTime = currentTime;
-        console.log(startTime);
-        running = true;
-        render(startTime);
+        if (!running) {
+            startTime = currentTime;
+            running = true;
+            render();
+        }
     };
 }
