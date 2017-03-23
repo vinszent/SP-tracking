@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title id="gantt">Gantt canvas</title>
+    </head>
+    <body>
+
+        <canvas id="ganttCanvas" style="border:1px solid #000000"></canvas>
+
+        <div>
+            <button id="startButton">Start</button>
+            <button id="resetButton">Reset</button>
+        </div>
+        
+        <script language="javascript" src="./gantt.js"></script>
+        
+        <script language="javascript">
+         var gc = new GanttCanvas("ganttCanvas");
+        </script>
+
+        <script language="javascript">
+         // Input IP of websocket host
+         var host = "192.ip.goes.here";
+         var ws = new WebSocket(host);
+         ws.onopen = function(e) {onOpen(ws)};
+         ws.onmessage = function(e) {onMessage(e)};
+
+         function onOpen(e) {
+             console.log("Connected to " + host);
+         }
+         
+         function onMessage(e) {
+             var j = JSON.parse(e.data);
+             if (typeof j.componentId != "undefined") { // Assume correct data
+                 gc.addLabel(j.componentId, j.labelId, j.labelColor, j.labelTime, j.labelIn);
+             }
+         }
+         
+         document.getElementById("startButton").onclick = function() {gc.start(new Date().getTime())};
+         document.getElementById("resetButton").onclick = function() {gc.reset()};
+        </script>
+
+    </body>
+</html>
