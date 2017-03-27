@@ -28,6 +28,16 @@
   overflow-x: hidden;
 }
 
+#fileloadpopup {
+  z-index: 100;
+  width: 300px;
+  height: 200px;
+  margin: 20% auto;
+  background-color: rgba(255, 255, 255, 1);
+  border-radius: 4px;
+  overflow-x: hidden;
+}
+
 .menubutton {
   background-color: lightblue;
   padding: 2px;

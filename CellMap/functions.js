@@ -1160,11 +1160,13 @@ function updateSelected() {
 
 function initSave() {
   //Starts the save procedure by producing the dialog window.
+  //I don't think this file API check is  is relevant as it is 
+  //not used right now.
   if (window.File && window.FileReader && window.FileList && window.Blob) {
     //Open dialog box so we can start selecting a file to save to
     var div = document.getElementById("maindiv")
     //var fileIOStr = "<input type=\"file\" id=\"cellfile\" name=\"fileToSaveTo\"/>"
-    //Easier to use a link to download a file
+    //Easier to use a link to download a file 
     var dlLinkStr = "<a id=\"dl\" href=\"\"></a>"
     var btnStr = "<button id=\"innersavebtn\">Save</button>"
     var popupInnerStr = "<div id=\"filesavepopup\">" + dlLinkStr + btnStr + "</div>"
@@ -1204,6 +1206,26 @@ function saveCellToServer() {
   //be saved online. Makes for easy remote access.
 }
 
+function initLoad() {
+  //Starts the save procedure by producing the dialog window.
+  if (window.File && window.FileReader && window.FileList && window.Blob) {
+    //Open dialog box so we can start selecting a file to save to
+    var div = document.getElementById("maindiv")
+    var fileIOStr = "<input type=\"file\" id=\"fileloader\" name=\"loadfile\"/>"
+    var btnStr = "<button id=\"innerloadbtn\">Load</button>"
+    var popupInnerStr = "<div id=\"fileloadpopup\">" + fileIOStr + btnStr + "</div>"
+    var popupStr = "<div id=\"popupbg\" class=\"popupbackground\">" + popupInnerStr + "</div>"
+    div.innerHTML += popupStr
+
+    document.getElementById("innerloadbtn").addEventListener('click', loadCellFromFile)
+    document.getElementById("popupbg").addEventListener('click', closePopup)
+    document.getElementById("fileloadpopup").addEventListener('click', function(evt) {evt.stopPropagation()})
+  } else {
+    alert('The File APIs are not fully supported in this browser.')
+  }
+}
+
+
 function closePopup() {
   //Close all popup stuff
   var div = document.getElementById("maindiv")
@@ -1211,40 +1233,74 @@ function closePopup() {
 }
 
 function loadCellFromFile() {
+  //Check compatability with file API
   if (window.File && window.FileReader && window.FileList && window.Blob) {
-    console.log("We can read files!")
+    console.log("We can read files! Yay!")
+    //Check if there actually is a file to load
+    var files = document.getElementById('fileloader').files
+    if (!files.length) {
+      alert("Please select a file!")
+      return 
+    } 
+
+    var file = files[0]
+    var reader = new FileReader()
+
+    reader.onloadend = function(evt) {
+      if (evt.target.readyState == FileReader.DONE) {
+        console.log("File Reader is Ready!")
+        console.log(evt.target.result)
+        stuffs = JSON.parse(evt.target.result)
+        console.log(stuffs)
+      }
+    }
+
+    var fileBlob = file
+    reader.readAsBinaryString(fileBlob)
   } else {
     alert('The File APIs are not fully supported in this browser.')
   }
 }
 
+//As the "JSON" string is not proper JSON yet, this function 
+//reads the string and makes a list of cell objects from it
+function objectStrToArray() {
+
+}
+
 //Takes an object as argument and returns a JSON string
+//Not really a JSON string yet, but the plan is to make it a 
+//proper JSON string
 function objectToJSONStr(obj) {
     var JSONStr = "{"
     for (var key in obj) {
       if (obj[key] == null) {
-        JSONStr += "\"" + key + "\":" + "None"
+        JSONStr += "\"" + key + "\": " + "\"None\""
       } else if(typeof obj[key] == "object") {
-        JSONStr += "\"" + key + "\":" + obj[key].id
+        JSONStr += "\"" + key + "\": " + "\"" + obj[key].id + "\""
+      } else if (typeof obj[key] == "string"){
+        JSONStr += "\"" + key + "\": " + "\"" + obj[key] + "\""
       } else {
-        JSONStr += "\"" + key + "\":" + obj[key]
+        JSONStr += "\"" + key + "\": " + obj[key]
       }
-      JSONStr += ","
+      JSONStr += ", "
     }
 
-    return JSONStr.slice(0,-1) + "}"
+    return JSONStr.slice(0,-2) + "}"
   }
 
 //Returns the JSON string representation of all objects in cell
+//Not really a JSON string yet, but the plan is to make it a 
+//proper JSON string
 function makeJSONStrToSave() {
-  var JSONStr = "{"
+  var JSONStr = "{\"objects\": \n[\n"
   for (var i = 0; i < objects.length; i++) {
     for (var j = 0; j < objects[i].length; j++) {
       console.log(objects[i][j])
-      JSONStr += "[" + objectToJSONStr(objects[i][j]) + "],"
+      JSONStr += objectToJSONStr(objects[i][j]) + ","
     }
   }
-  return JSONStr.slice(0, -1) + "}"
+  return JSONStr.slice(0, -1) + "\n]\n}"
 }
 
 ///////////////MATH SECTION////////////////////////
