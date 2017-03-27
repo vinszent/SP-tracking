@@ -11,6 +11,7 @@
         <div>
             <button id="startButton">Start</button>
             <button id="resetButton">Reset</button>
+            <button id="stopButton">Stop</button>
         </div>
         
         <script language="javascript" src="./gantt.js"></script>
@@ -20,8 +21,9 @@
         </script>
 
         <script language="javascript">
-         // Input IP of websocket host
-         var host = "192.ip.goes.here";
+         /* Input IP of websocket host*/
+         /* var host = "ws://echo.websocket.org/";*/
+         var host = "ws://192.168.0.131:9001/websocket/kafka";
          var ws = new WebSocket(host);
          ws.onopen = function(e) {onOpen(ws)};
          ws.onmessage = function(e) {onMessage(e)};
@@ -31,14 +33,23 @@
          }
          
          function onMessage(e) {
+             console.log(e);
              var j = JSON.parse(e.data);
-             if (typeof j.componentId != "undefined") { // Assume correct data
-                 gc.addLabel(j.componentId, j.labelId, j.labelColor, j.labelTime, j.labelIn);
+             if (typeof j.payload != "undefined") { // Assume correct data
+                 if (j.payload >= 1 && j.payload <= 8)
+                     var labelColor = "yellow";
+                 else
+                     var labelColor = "green";
+
+                 var labelIn = (j.camera == "camera_1") ? "true" : "false";
+                 
+                 gc.addLabel(j.payload, "Zone 1", labelColor, labelIn);
              }
          }
          
          document.getElementById("startButton").onclick = function() {gc.start(new Date().getTime())};
          document.getElementById("resetButton").onclick = function() {gc.reset()};
+         document.getElementById("stopButton").onclick = function() {debugger};
         </script>
 
     </body>

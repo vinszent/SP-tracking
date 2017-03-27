@@ -21,10 +21,10 @@ function GanttCanvas(canvasId) {
         textPadding: 3,
         rowHeight: 20,
         rowSpacing: 4,
-        defaultTimeInterval: 100,
-        timeInterval: 100, // Incremented to fit if schedule goes beyond canvas width
-        labelSpacing: 20,
-        width: 800
+        defaultTimeInterval: 80,
+        timeInterval: 80, // Incremented to fit if schedule goes beyond canvas width
+        labelSpacing: 80,
+        width: 1200
     };
 
     // Assumes labels are added in chronological order
@@ -60,7 +60,7 @@ function GanttCanvas(canvasId) {
         }
     }
 
-    GanttCanvas.prototype.addLabel = function(componentId, labelId, labelColor, labelTime, labelIn) {
+    GanttCanvas.prototype.addLabel = function(componentId, labelId, labelColor, labelIn) {
         if (typeof components[componentId] == "undefined") {
             GanttCanvas.prototype.addComponent(componentId);
         }
@@ -68,7 +68,7 @@ function GanttCanvas(canvasId) {
         c = components[componentId];
 
         if (!startTime) {
-            GanttCanvas.prototype.start(labelTime);
+            GanttCanvas.prototype.start(new Date().getTime());
         }
             
         if (typeof c.labels[c.cur] == "undefined") {
@@ -76,7 +76,7 @@ function GanttCanvas(canvasId) {
             if (labelIn == "true") {
                 l = new Label(labelId, labelColor);
                 
-                l.times[0] = labelTime;
+                l.times[0] = (new Date().getTime());
 
                 c.labels[c.cur] = l;
                 
@@ -86,7 +86,7 @@ function GanttCanvas(canvasId) {
         } else {
 
             if (labelIn != "true") { // Assume we are leaving the current label
-                c.labels[c.cur].times[1] = labelTime;
+                c.labels[c.cur].times[1] = new Date().getTime();
                 
                 console.log("Component %s left %s.", componentId, c.labels[c.cur].id);
 
@@ -125,7 +125,7 @@ function GanttCanvas(canvasId) {
         components.forEach(function(c, i) {
             
             ctx.fillStyle = "black";
-            ctx.fillText(c.id, opt.padding, opt.padding + row*(opt.rowHeight + opt.rowSpacing) + opt.rowHeight/2, opt.labelSpacing);
+            ctx.fillText("Component " + c.id, opt.padding, opt.padding + row*(opt.rowHeight + opt.rowSpacing) + opt.rowHeight/2, opt.labelSpacing);
 
             c.labels.forEach(function(l, j) {
                 
@@ -155,7 +155,7 @@ function GanttCanvas(canvasId) {
         // The current time bar
         var x = opt.padding + opt.labelSpacing + Math.floor((new Date().getTime() - startTime) / opt.timeInterval);
         ctx.fillRect(x, 0, 3, ctx.canvas.height);
-        ctx.fillText((parseInt(new Date().getTime() - startTime) / 1000).toFixed(1), x + 5, ctx.canvas.height - 3, ctx.canvas.width - x);
+        ctx.fillText(((new Date().getTime() - startTime) / 1000).toFixed(1), x + 5, ctx.canvas.height - 3, ctx.canvas.width - x);
     };
 
     var requestId;
@@ -171,7 +171,7 @@ function GanttCanvas(canvasId) {
     }
 
     function squish() {
-        opt.timeInterval *= 2;
+        opt.timeInterval *= 1.5;
     }
     
     GanttCanvas.prototype.reset = function() {
