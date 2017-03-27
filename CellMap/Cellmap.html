@@ -6,33 +6,37 @@
 		<link rel="stylesheet" type="text/css" href="./style.css">
 	</head>
 	<body>
-		<div id="displaydiv">
-			<canvas id="mapcanvas" width="700" height="400""></canvas>
-			<div id="selectionmenu">
-				<div class="menubutton" id="canvasbutton" onmousedown="setManualAddType('conveyor',this);">Conveyor</div>
-				<div class="menubutton" id="elevatorbutton" onmousedown="setManualAddType('stop',this);">Elevator</div>
-				<div class="menubutton" id="robotbutton" onclick="">Robot</div>
-				<div class="menubutton" id="editbutton" onclick="">Edit</div>
-				<div class="menubutton" id="removebutton" onclick="">Remove</div>
-				<div class="menubutton" id="linkbutton" onclick="linkObjects('link', this)">Link</div>
-				<div class="menubutton" id="savebutton" onclick="">Save</div>
-			</div>
-		</div>
-		<div id="cellinfo">
-			<p id="idfield">NaN</p>
-			<p id="birthfield">NaN</p>
-		</div>
-		<div>
-			<button onclick="run()">RUN</button>
-			<!-- <button onclick="startAnimation()">DRAW</button> -->
-			<button onclick="stopAnimation()">STOP</button>
-			<button onclick="addComponent()">ADD</button>
-			<button onclick="clearAll()">CLEAR</button>
-		</div>
-		<br>
-		<div id="selectedobjectinfo">
-			
-		</div>
+    <div id="maindiv">
+  		<div id="displaydiv">
+  			<canvas id="mapcanvas" width="700" height="400""></canvas>
+  			<div id="selectionmenu">
+  				<div class="menubutton" id="canvasbutton" onmousedown="setManualAddType('conveyor',this);">Conveyor</div>
+  				<div class="menubutton" id="elevatorbutton" onmousedown="setManualAddType('stop',this);">Elevator</div>
+  				<div class="menubutton" id="robotbutton" onclick="">Robot</div>
+  				<div class="menubutton" id="editbutton" onclick="">Edit</div>
+  				<div class="menubutton" id="removebutton" onclick="">Remove</div>
+  				<div class="menubutton" id="linkbutton" onclick="linkObjects('link', this)">Link</div>
+  				<div class="menubutton" id="savebutton" onclick="initSave()">Save</div>
+          <div class="menubutton" id="loadbutton" onclick="loadCellFromFile()">Load</div>
+  			</div>
+  		</div>
+  		<div id="cellinfo">
+  			<p id="idfield">NaN</p>
+  			<p id="birthfield">NaN</p>
+  		</div>
+  		<div>
+  			<button onclick="run()">RUN</button>
+  			<!-- <button onclick="startAnimation()">DRAW</button> -->
+  			<button onclick="stopAnimation()">STOP</button>
+  			<button onclick="addComponent()">ADD</button>
+  			<button onclick="clearAll()">CLEAR</button>
+  		</div>
+  		<br>
+  		<div id="selectedobjectinfo">
+  			
+  		</div>
+    </div>
 		<script type="text/javascript" src="./functions.js"></script>
+		<!--<script type="text/javascript" src="./communication.js"></script>-->
 	</body>
 </html>

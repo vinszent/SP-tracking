@@ -5,7 +5,7 @@
 //as a complement to the x and y parameters
 
 //Component is a component going through the cell
-class Component {
+class Component{
 
 	constructor(x, y) {
 		this.x = x
@@ -72,6 +72,28 @@ class Component {
 		default: 
 			console.log("Cannot move along this section!")
 			break
+		}
+	}
+
+	//Moves to a position on the conveyor
+	//d is the distance along the conveyor
+	moveAlongTo(d) {
+		switch (this.section.type) {
+			case "conveyor": 
+				var q = d/this.section.l
+				var newX = this.section.xs + q*this.section.dx
+				var newY = this.section.ys + q*this.section.dy
+				this.moveTo(newX,newY)
+				break
+			case "stop":
+				//Do nothing
+				break
+			case "robotarm":
+				//Do nothing
+				break
+			default: 
+				console.log("Cannot move along this section!")
+				break
 		}
 	}
 
@@ -151,6 +173,7 @@ class Conveyor {
 		this.speed = 2
 
 		this.maxCap = 8
+    //Not used
 		this.comps = []
 		//You should be able to link up different types of 
 		//conveyor sections, elevators and stops
@@ -162,6 +185,8 @@ class Conveyor {
 		this.type = "conveyor"
 
 		this.highlighted = false
+
+		this.camera = null
 	}
 
 	get center() {
@@ -210,6 +235,25 @@ class Conveyor {
 			case "stop":
 				this.xe = section.x
 				this.ye = section.y
+				break
+			default:
+				console.log("Conveyor can not link to section!")
+				break
+		}
+		
+	}
+
+	linkStart(section) {
+		this.prevSec = section
+		section.nextSec = this
+		switch (section.type) {
+			case "conveyor":
+				this.xs = section.xe
+				this.ys = section.ye
+				break
+			case "stop":
+				this.xs = section.x
+				this.ys = section.y
 				break
 			default:
 				console.log("Conveyor can not link to section!")
@@ -282,6 +326,7 @@ class Conveyor {
 		*/
 	}
 }
+
 
 //A robot arm that can move components
 class RobotArm {
@@ -505,6 +550,42 @@ class Stop {
 	}
 }
 
+//A sensor that can detect components
+//Can only be placed at a stop right now
+class Sensor{
+
+	constructor() {
+    this.x = 0
+    this.y = 0
+    this.section = null
+
+		this.id = null
+	}
+
+  monitorSection(section) {
+    this.section = section
+    this.x = section.x
+    this.y = section.y
+  }
+
+  draw() {
+    var c = document.getElementById("mapcanvas")
+    var ctx = c.getContext("2d")
+    
+    ctx.strokeStyle = "purple"
+    ctx.rect(this.x-5, this.y-5, 10, 10)
+    ctx.stroke()
+
+    //Not sure if this will be implemented for sensors
+    if (this.highlighted) {
+      ctx.beginPath()
+      
+      ctx.arc(this.x,this.y,8,0,2*Math.PI)
+      ctx.stroke()
+    }
+  }
+}
+
 //A crosshairs used for marking stuff
 class Crosshairs {
 	constructor() {
@@ -541,6 +622,8 @@ class Crosshairs {
 		ctx.stroke()
 	}
 
+  //There's no real need to have a class for this
+  //you just want to draw a crosshairs at x,y.
 	static statDraw(x, y) {
 		var l = 3
 
@@ -562,6 +645,8 @@ class Crosshairs {
 	}
 }
 
+//These are all global variables which is something that
+//should be avoided.
 //Variables used for animating
 var running = false
 var menuUpdated = true
@@ -600,61 +685,43 @@ init()
 
 //Initiate all stuff
 function init() {
+	console.log("Initiating")
 
 	objects.push(comps)
 	objects.push(robs)
 	objects.push(convs)
 	objects.push(stops)
 
-	robs.push(new RobotArm(180, 40))
+	robs.push(new RobotArm(300, 190))
 
-	stops.push(new Stop(180, 60))
-	stops.push(new Stop(150, 40))
+	stops.push(new Stop(250, 160))
+	stops.push(new Stop(250, 210))
 
-	convs.push(new Conveyor(40,50,80,90))
-	convs.push(new Conveyor(80,90,120,40))
-	convs.push(new Conveyor(120,40,40,50))
-	//Inserter conveyor
-	convs.push(new Conveyor(0,0,40,50))
+	convs.push(new Conveyor(50,180,200,180))
+	convs.push(new Conveyor(200,180,200,110))
+	convs.push(new Conveyor(200,110,250,110))
+	convs.push(new Conveyor(250,110,250,160))
+  convs.push(new Conveyor(250,160,250,210))
+  convs.push(new Conveyor(250,210,250,260))
+	convs.push(new Conveyor(250,260,200,260))
+	convs.push(new Conveyor(200,260,200,200))
+	convs.push(new Conveyor(200,200,50,200))
+	convs.push(new Conveyor(50,200,50,180))
 
-	//New loop
-	convs.push(new Conveyor(120,80,140,60))
-	convs.push(new Conveyor(190,60,200,100))
-	convs.push(new Conveyor(200,100,120,120))
-	convs.push(new Conveyor(120,120,120,80))
-	convs.push(new Conveyor(0,0,0,0))
+  var i = 0
 
+  for ( i; i < 3; i++) {
+    convs[i].linkTo(convs[i+1])
+  }
+  console.log(i)
+  convs[i].linkTo(stops[0]); i++
+  stops[0].linkTo(convs[i]);
+  convs[i].linkTo(stops[1]); i++
+  stops[1].linkTo(convs[i]);
+  for ( i; i < convs.length; i++) {
+    convs[i].linkTo(convs[(i+1)%(convs.length)])
+  }
 
-	for (var i = 0; i < 3; i++) {
-		convs[i].nextSec = convs[(i+1)%(3)]
-		convs[i].speed = i+1
-	}
-
-	convs[3].nextSec = convs[0]
-
-	convs[4].linkTo(stops[0])
-	stops[0].linkTo(convs[5])
-	convs[5].linkTo(convs[6])
-	convs[6].linkTo(convs[7])
-	convs[7].linkTo(convs[4])
-	convs[8].linkTo(convs[4])
-	stops[1].linkTo(convs[8])
-
-
-	comps.push(new Component(0,0))
-	comps.push(new Component(0,0))
-	comps.push(new Component(0,0))
-	comps.push(new Component(0,0))
-	//Component on second loop
-	comps.push(new Component(0,0))
-	comps.push(new Component(0,0))
-
-	for (var i = 0; i < 4; i++) {
-		comps[i].switchSection(convs[i])
-	}
-
-	comps[4].switchSection(convs[4])
-	comps[5].switchSection(convs[5])
 
 	robs[0].target = [stops[0].x, stops[0].y]
 }
@@ -672,27 +739,30 @@ function resetGhost() {
 	var typeBtn = null
 }
 
+//Animate the robots in the cell
 function animateRobot() {
 	for (var i = 0; i < robs.length; i++) {
 		robs[i].draw()
 		robs[i].moveToTarget()
 	}
-	if (robs[0].comps.length == 0 && stops[0].comps.length != 0 && robs[0].checkAtTarget() &&
+	if ( !robs[0].comps.length && stops[0].comps.length != 0 && robs[0].checkAtTarget() &&
 			withinRadius(robs[0].toolPos,stops[0].pos, 3)) {
 		robs[0].grabFrom(stops[0])
-		robs[0].target = [150, 40]
+		robs[0].target = [stops[1].x, stops[1].y]
 	} else if (robs[0].comps[0] != null && robs[0].checkAtTarget()) {
 		robs[0].releaseTo(stops[1])
-		robs[0].target = [180, 60]
+		robs[0].target = [stops[0].x, stops[0].y]
 	}
 }
 
+//Animate the stops in the cell
 function animateStop() {
 	for (var i = 0; i < stops.length; i++) {
 		stops[i].draw()
 	}
 }
 
+//Animate the components
 function animateComponent() {
 	for (var i = 0; i < comps.length; i++) {
 		comps[i].draw()
@@ -721,6 +791,8 @@ function drawData() {
 
 //All moving should be done outside of the animation loop
 function animateCell() {
+  if (!objects.length)
+    return 
 	var c = document.getElementById("mapcanvas")
 	var ctx = c.getContext("2d")
 
@@ -733,9 +805,9 @@ function animateCell() {
 	animateRobot()
 	if (objectToAdd != null) {
 		objectToAdd.draw()
-		if (snapped)
-			Crosshairs.statDraw(snapPos[0],snapPos[1])
 	}
+	if (snapped)
+		Crosshairs.statDraw(snapPos[0],snapPos[1])
 }
 
 //Checks mouse snad snapping
@@ -744,11 +816,22 @@ function checkIO() {
 	if (objectToAdd != null) {
 		var snap = snapTo(false)
 		if (objectToAddType == "conveyor" && snap != null) {
+			if(!anchored){
+				objectToAdd.endPos = snap[0]
+				objectToAdd.startPos = snap[0]
+			} else {
+				objectToAdd.endPos = snap[0]
+			}
 			snapped = true
-			objectToAdd.endPos = snap[0]
 			snapPos = snap[0]
 			snapObject = snap[1]
 		} else if (objectToAddType == "conveyor" && snap == null) {
+			if(!anchored){
+				objectToAdd.endPos = mousePosMap
+				objectToAdd.startPos = mousePosMap
+			} else {
+				objectToAdd.endPos = mousePosMap
+			}
 			snapped = false
 			objectToAdd.endPos = mousePosMap
 			snapPos = null
@@ -787,7 +870,7 @@ function setManualAddType(type, btn) {
 		objectToAddType = type
 		switch (type) {
 			case "conveyor":
-				//objectToAdd = new Conveyor(0,0,0,0)
+				objectToAdd = new Conveyor(0,0,0,0)
 				break
 			case "stop":
 				objectToAdd = new Stop(0,0)
@@ -896,11 +979,12 @@ document.getElementById("mapcanvas").addEventListener("mousedown", onMapClick)
 function onMapClick(evt) {
 	//First click = start coveyor or place component, robot or stop
 	//Second click = end conveyor
-	if (!manuallyAdding && !linking)
+	if (!manuallyAdding && !linking) {
 		if (highlightedObject != null) {
 			selectedObject = highlightedObject
 			drawObjectInfo()
 		}
+	}
 	switch (objectToAddType) {
 		case "conveyor":
 			manAddConv()
@@ -922,8 +1006,10 @@ function manAddConv() {
 	if (!anchored) {
 
 		if (snapped) {
-			objectToAdd = new Conveyor(snapPos[0], snapPos[1], snapPos[0], snapPos[1])
-			snapObject.linkTo(objectToAdd)
+			console.log("Snapped first point")
+			objectToAdd.startPos = snapPos
+			objectToAdd.endPos = snapPos
+			objectToAdd.linkStart(snapObject)
 			snapped = false
 		} else {
 			objectToAdd = new Conveyor(mousePosMap[0], mousePosMap[1], mousePosMap[0], mousePosMap[1])
@@ -1014,7 +1100,25 @@ function drawObjectInfo() {
 	var div = document.getElementById("selectedobjectinfo")
 	var htmlStr = null
 	for (var key in selectedObject) {
-		htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key]+"\"></div>"
+		if(selectedObject[key] != null) {
+			switch (key) {
+				case "section":
+					htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key].id+"\"></div>"
+					break
+				case "prevSec":
+					htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key].id+"\"></div>"
+					break
+				case "nextSec":
+					htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key].id+"\"></div>"
+					break
+				case "comps":
+					//htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key].id+"\"></div>"
+					break
+				default:
+					htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key]+"\"></div>"
+					break
+			}
+		}
 	}
 	htmlStr += "<button onclick=\"updateSelected()\">Update</button>"
 	div.innerHTML = htmlStr
@@ -1026,9 +1130,121 @@ function updateSelected() {
 	var descendents = ancestor.getElementsByTagName("input")
 
 	for(var i = 0; i < descendents.length; i++) {
-		selectedObject[descendents[i].name] = descendents[i].value
 		console.log(descendents[i].name + "=" + descendents[i].value)
+		switch (descendents[i].name) {
+				case "section":
+					selectedObject[descendents[i].name] = getByID(descendents[i].value)
+					break
+				case "prevSec":
+					selectedObject.linkStart(getByID(descendents[i].value))
+					break
+				case "nextSec":
+					selectedObject.linkTo(getByID(descendents[i].value))
+					break
+				case "comps":
+					//htmlStr += "<div class=\"datadiv\"><p>"+key+"</p><input type=\"text\" name=\""+key+"\" value=\""+selectedObject[key].id+"\"></div>"
+					break
+				case "id":
+					selectedObject[descendents[i].name] = descendents[i].value
+					break
+				case "type":
+					selectedObject[descendents[i].name] = descendents[i].value
+					break
+				default:
+					selectedObject[descendents[i].name] = Number(descendents[i].value)
+					break
+		}
+		//console.log(descendents[i].name + "=" + descendents[i].value)
 	}
+}
+
+function initSave() {
+  //Starts the save procedure by producing the dialog window.
+  if (window.File && window.FileReader && window.FileList && window.Blob) {
+    //Open dialog box so we can start selecting a file to save to
+    var div = document.getElementById("maindiv")
+    //var fileIOStr = "<input type=\"file\" id=\"cellfile\" name=\"fileToSaveTo\"/>"
+    //Easier to use a link to download a file
+    var dlLinkStr = "<a id=\"dl\" href=\"\"></a>"
+    var btnStr = "<button id=\"innersavebtn\">Save</button>"
+    var popupInnerStr = "<div id=\"filesavepopup\">" + dlLinkStr + btnStr + "</div>"
+    var popupStr = "<div id=\"popupbg\" class=\"popupbackground\">" + popupInnerStr + "</div>"
+    div.innerHTML += popupStr
+
+    document.getElementById("innersavebtn").addEventListener('click', saveCellToFile)
+    document.getElementById("popupbg").addEventListener('click', closePopup)
+    document.getElementById("filesavepopup").addEventListener('click', function(evt) {evt.stopPropagation()})
+  } else {
+    alert('The File APIs are not fully supported in this browser.')
+  }
+}
+
+function saveCellToFile(fileName) {
+  //Handle the file
+  //This will only work on some browsers as the
+  //download-attribute of <a> is not supported.
+  //See: http://caniuse.com/#feat=download
+  var dlLink = document.getElementById('dl')
+  var cellBlob = new Blob([makeJSONStrToSave()], {type: 'application/json'})
+  dlLink.href = URL.createObjectURL(cellBlob)
+  dlLink.download = "cellmap.acm" //Automated Cell Map (acm) format
+  dlLink.click()
+  console.log("Cell Blob: " + cellBlob.toString())
+  closePopup()
+  
+}
+
+function saveCellToServer() {
+  //Send cell configuration to server to be saved.
+  //There should also be some kind of "load" function 
+  //that can fetch cell configurations from the 
+  //server and run them on the host. This will always 
+  //work, and should be used if the browser does not 
+  //have File API support. Also good as the cell will
+  //be saved online. Makes for easy remote access.
+}
+
+function closePopup() {
+  //Close all popup stuff
+  var div = document.getElementById("maindiv")
+  div.removeChild(document.getElementById("popupbg"))
+}
+
+function loadCellFromFile() {
+	if (window.File && window.FileReader && window.FileList && window.Blob) {
+  	console.log("We can read files!")
+	} else {
+	  alert('The File APIs are not fully supported in this browser.')
+	}
+}
+
+//Takes an object as argument and returns a JSON string
+function objectToJSONStr(obj) {
+    var JSONStr = "{"
+    for (var key in obj) {
+      if (obj[key] == null) {
+        JSONStr += "\"" + key + "\":" + "None"
+      } else if(typeof obj[key] == "object") {
+        JSONStr += "\"" + key + "\":" + obj[key].id
+      } else {
+        JSONStr += "\"" + key + "\":" + obj[key]
+      }
+      JSONStr += ","
+    }
+
+    return JSONStr.slice(0,-1) + "}"
+  }
+
+//Returns the JSON string representation of all objects in cell
+function makeJSONStrToSave() {
+  var JSONStr = "{"
+  for (var i = 0; i < objects.length; i++) {
+    for (var j = 0; j < objects[i].length; j++) {
+      console.log(objects[i][j])
+      JSONStr += "[" + objectToJSONStr(objects[i][j]) + "],"
+    }
+  }
+  return JSONStr.slice(0, -1) + "}"
 }
 
 ///////////////MATH SECTION////////////////////////
@@ -1108,4 +1324,15 @@ function withinRadius(a, c, r) {
 	if (((c[0]-a[0])*(c[0]-a[0])+(c[1]-a[1])*(c[1]-a[1]))<=r*r)
 		return true
 	return false
+}
+
+function getByID(idStr) {
+	for (var i = 0; i < objects.length; i++) {
+		for (var j = 0; j < objects[i].length; j++) {
+			if(objects[i][j].id == idStr)
+				return objects[i][j]
+		}
+	}
+	console.log("ID not found!")
+	return null
 }
