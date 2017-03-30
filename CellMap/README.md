@@ -1,5 +1,5 @@
-#Javascript map of automated industrial cell
+# Javascript map of automated industrial cell
 
-##To do
+## To do
 
 * Add a timing function, maybe a time-sync to a backend server. 
