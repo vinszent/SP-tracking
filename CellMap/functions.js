@@ -555,33 +555,43 @@ class Stop {
 class Sensor{
 
   constructor() {
-    this.x = 0
-    this.y = 0
-    this.section = null
+    this.x = 0;
+    this.y = 0;
+    this.placement = 0;
+    this.section = null;
 
-    this.id = null
+    this.id = "CAM" + Math.floor(Math.random()*10000);
+
+    this.highlighted = false;
   }
 
   monitorSection(section) {
-    this.section = section
-    this.x = section.x
-    this.y = section.y
+    this.section = section;
+    this.x = section.x;
+    this.y = section.y;
+  }
+
+  detectedComp(compID) {
+    var comp = getByID(compID)
+    comp.switchSection(this.section);
+    comp.moveAlongTo(this.placement);
   }
 
   draw() {
     var c = document.getElementById("mapcanvas")
-    var ctx = c.getContext("2d")
+    var ctx = c.getContext("2d");
     
-    ctx.strokeStyle = "purple"
-    ctx.rect(this.x-5, this.y-5, 10, 10)
-    ctx.stroke()
+    ctx.beginPath()
+    ctx.strokeStyle = "purple";
+    ctx.rect(this.x-10, this.y-10, 20, 20);
+    ctx.stroke();
 
     //Not sure if this will be implemented for sensors
     if (this.highlighted) {
-      ctx.beginPath()
+      ctx.beginPath();
       
-      ctx.arc(this.x,this.y,8,0,2*Math.PI)
-      ctx.stroke()
+      ctx.arc(this.x,this.y,8,0,2*Math.PI);
+      ctx.stroke();
     }
   }
 }
@@ -663,7 +673,10 @@ var robs = []
 var stops = []
 var convs = []
 var comps = []
+var sensors = []
 
+//Maybe add a 'toDraw' array with everything that needs to be drawn.
+var toDraw = []
 
 //Maybe creat a ghost class
 var anchored = false //Indicates that starting position of a conveyor has been set
@@ -724,6 +737,9 @@ function init() {
 
 
 robs[0].target = [stops[0].x, stops[0].y]
+
+sensors.push(new Sensor())
+sensors[0].monitorSection(stops[0])
 }
 
 //NOT USED
@@ -776,6 +792,12 @@ function animateConveyor() {
   }
 }
 
+function animateSensor() {
+  for (var i = 0; i < sensors.length; i++) {
+    sensors[i].draw()
+  }
+}
+
 //Draw mouse coordinates
 function drawMouseText() {
   var c = document.getElementById("mapcanvas")
@@ -785,6 +807,7 @@ function drawMouseText() {
   ctx.fillText("Mouse y: " + mousePosMap[1], 0, c.height-10)
 }
 
+//Have a wnindow/canvas that can visualize all the data gathered
 function drawData() {
 
 }
@@ -798,11 +821,15 @@ function animateCell() {
 
   ctx.clearRect(0,0,c.width,c.height)
 
+  //Everything will be drawn in this order, 
+  //that is the first stuff under the later.
   animateStop()
   animateConveyor()
   animateComponent()
   drawMouseText()
   animateRobot()
+  animateSensor()
+
   if (objectToAdd != null) {
     objectToAdd.draw()
   }
@@ -1235,28 +1262,33 @@ function closePopup() {
 function loadCellFromFile() {
   //Check compatability with file API
   if (window.File && window.FileReader && window.FileList && window.Blob) {
-    console.log("We can read files! Yay!")
+    console.log("We can read files! Yay!");
     //Check if there actually is a file to load
-    var files = document.getElementById('fileloader').files
+    var files = document.getElementById('fileloader').files;
     if (!files.length) {
-      alert("Please select a file!")
-      return 
-    } 
+	   alert("Please select a file!");
+	   return ;
+    }
 
-    var file = files[0]
-    var reader = new FileReader()
+      var file = files[0];
+      var reader = new FileReader();
 
-    reader.onloadend = function(evt) {
+      reader.onloadend = function(evt) {
       if (evt.target.readyState == FileReader.DONE) {
         console.log("File Reader is Ready!")
         console.log(evt.target.result)
         stuffs = JSON.parse(evt.target.result)
         console.log(stuffs)
       }
-    }
+    };
 
-    var fileBlob = file
-    reader.readAsBinaryString(fileBlob)
+    var fileBlob = file;
+    reader.readAsBinaryString(fileBlob);
+      
+
+    closePopup();
+     
+      
   } else {
     alert('The File APIs are not fully supported in this browser.')
   }
