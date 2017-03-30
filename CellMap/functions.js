@@ -19,7 +19,7 @@ class Component{
     this.conv
 
     this.id = "C" + Math.floor(Math.random()*10000)
-    this.color = "green"
+    this.color = "rgb(" + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + "," + Math.floor(Math.random()*255) + ")"
 
     this.section = null
 
