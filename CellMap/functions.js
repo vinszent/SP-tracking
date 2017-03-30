@@ -571,6 +571,7 @@ class Sensor{
     this.y = section.y;
   }
 
+  //If we identify a component, and move it here 
   detectedComp(compID) {
     var comp = getByID(compID)
     comp.switchSection(this.section);
@@ -757,6 +758,9 @@ function resetGhost() {
 
 //Animate the robots in the cell
 function animateRobot() {
+  if (!robs.length) {
+    return ;
+  }
   for (var i = 0; i < robs.length; i++) {
     robs[i].draw()
     robs[i].moveToTarget()
@@ -773,6 +777,9 @@ function animateRobot() {
 
 //Animate the stops in the cell
 function animateStop() {
+  if (!stops.length) {
+    return ;
+  }
   for (var i = 0; i < stops.length; i++) {
     stops[i].draw()
   }
@@ -780,6 +787,9 @@ function animateStop() {
 
 //Animate the components
 function animateComponent() {
+  if (!comps.length) {
+    return ;
+  }
   for (var i = 0; i < comps.length; i++) {
     comps[i].draw()
     comps[i].moveAlong()
@@ -787,12 +797,18 @@ function animateComponent() {
 }
 
 function animateConveyor() {
+  if (!convs.length) {
+    return ;
+  }
   for (var i = 0; i < convs.length; i++) {
     convs[i].draw()
   }
 }
 
 function animateSensor() {
+  if (!sensors.length) {
+    return ;
+  }
   for (var i = 0; i < sensors.length; i++) {
     sensors[i].draw()
   }
