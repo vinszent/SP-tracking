@@ -7,12 +7,12 @@
 #include <quirc.h>
 #include <string.h>
 
-#define BROKER_URI "localhost:9092"
+#define BROKER_URI "192.168.0.131:9092"
 #define TOPIC_NAME "qr-tracking"
 #define PARTITION_NUMBER 0
-/* #define PIPELINE_STR "v4l2src ! videoconvert ! video/x-raw, width=640, height=480, format=GRAY8 ! appsink name=appsink" */
+#define PIPELINE_STR "v4l2src ! videoconvert ! video/x-raw, width=320, height=240, format=GRAY8 ! appsink name=appsink"
 /* #define PIPELINE_STR "tcpclientsrc host=192.168.0.134 port=5000 ! jpegdec ! appsink name=appsink" */
-#define PIPELINE_STR "udpsrc port=5000 caps=\"application/x-rtp\" ! rtph264depay ! decodebin !  videoconvert ! video/x-raw, format=GRAY8 ! appsink name=appsink"
+/* #define PIPELINE_STR "udpsrc port=5000 caps=\"application/x-rtp\" ! rtph264depay ! decodebin !  videoconvert ! video/x-raw, format=GRAY8 ! appsink name=appsink" */
 #define QR_JSON "{\"camera\" : \"%s\", \"time\" : \"%ld\", \"payload\" : \"%s\", \"corners\" : [{\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}]}"
 #define TMP_CAMERA_ID "camera_1"
 
@@ -53,8 +53,8 @@ new_sample_cb(GstAppSink* sink, gpointer udata)
 
     image = quirc_begin(quirc, &w, &h);
 
-    g_assert_cmpint(w, ==, 640);
-    g_assert_cmpint(h, ==, 480);
+    /* g_assert_cmpint(w, ==, 640); */
+    /* g_assert_cmpint(h, ==, 480); */
 
     memmove(image, map.data, map.size);
 
@@ -87,8 +87,8 @@ new_sample_cb(GstAppSink* sink, gpointer udata)
 
             g_print("Successful decode\n");
 
-            rd_kafka_produce(topic, PARTITION_NUMBER, RD_KAFKA_MSG_F_FREE,
-                json, strlen(json), NULL, 0, NULL);
+            /* rd_kafka_produce(topic, PARTITION_NUMBER, RD_KAFKA_MSG_F_FREE, */
+            /*     json, strlen(json), NULL, 0, NULL); */
         }
     }
 
@@ -122,15 +122,15 @@ main(gint argc, gchar** argv)
 
     quirc = quirc_new();
 
-    quirc_resize(quirc, 640, 480);
+    quirc_resize(quirc, 320, 240);
 
-    kafka = rd_kafka_new(RD_KAFKA_PRODUCER, NULL, NULL, 0);
+    /* kafka = rd_kafka_new(RD_KAFKA_PRODUCER, NULL, NULL, 0); */
 
-    g_assert_nonnull(kafka);
+    /* g_assert_nonnull(kafka); */
 
-    rd_kafka_brokers_add(kafka, BROKER_URI);
+    /* rd_kafka_brokers_add(kafka, BROKER_URI); */
 
-    topic = rd_kafka_topic_new(kafka, TOPIC_NAME, NULL);
+    /* topic = rd_kafka_topic_new(kafka, TOPIC_NAME, NULL); */
 
     pipeline = gst_parse_launch(PIPELINE_STR, &err);
 
