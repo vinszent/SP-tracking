@@ -33,7 +33,7 @@ public class DBService
         }
     }
 
-    public static String idToCubeColor(int id)
+    public static String idToComponentColor(int id)
     {
         if (1 <= id && id <= 8) return "yellow";
         else if (9 <= id && id <= 16) return "green";

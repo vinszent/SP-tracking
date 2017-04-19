@@ -36,7 +36,7 @@ public class RequestHandler implements HttpHandler {
         {
             if (request.containsKey("id"))
             {
-                response = getCubeColor(Integer.parseInt(request.get("id")));
+                response = getComponentColor(Integer.parseInt(request.get("id")));
             }
         }
         catch (Exception e)
@@ -52,9 +52,9 @@ public class RequestHandler implements HttpHandler {
         os.close();
     }
 
-    private String getCubeColor(int id) throws SQLException
+    private String getComponentColor(int id) throws SQLException
     {
-        PreparedStatement statement = dbConn.prepareStatement("SELECT color FROM Cubes WHERE id = ?");
+        PreparedStatement statement = dbConn.prepareStatement("SELECT color FROM Components WHERE id = ?");
         statement.setInt(1, id);
         
         ResultSet resultSet = statement.executeQuery();

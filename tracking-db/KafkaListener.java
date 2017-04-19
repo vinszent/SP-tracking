@@ -53,8 +53,8 @@ public class KafkaListener extends Thread
                     switch (res) {
                         case "camera":
                             int id = ((Long) obj.get("payload")).intValue();
-                            insertCube(id, DBService.idToCubeColor(id));
-                            System.out.printf("KafkaListener: Cube with id %d was added to the database.\n", id);
+                            insertComponent(id, DBService.idToComponentColor(id));
+                            System.out.printf("KafkaListener: A component with id %d was added to the database.\n", id);
                             break;
                             
                         default:
@@ -69,9 +69,9 @@ public class KafkaListener extends Thread
         }
     }
 
-    private void insertCube(int id, String color) throws SQLException
+    private void insertComponent(int id, String color) throws SQLException
     {
- 		PreparedStatement statement = dbConn.prepareStatement("INSERT INTO Cubes VALUES (?, ?)");
+ 		PreparedStatement statement = dbConn.prepareStatement("INSERT INTO Components VALUES (?, ?)");
 	    statement.setInt(1, id);
 	    statement.setString(2, color);
 	    statement.executeUpdate();
