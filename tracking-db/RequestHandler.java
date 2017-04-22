@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import org.json.*;
+
 public class RequestHandler implements HttpHandler {
     private Connection dbConn;
     
@@ -31,24 +33,27 @@ public class RequestHandler implements HttpHandler {
         }
 
         // TODO: Parse all requests and fetch data accordingly
-        String response = ""; // Default response if query throws exception
+        JSONObject response = new JSONObject().put("succeeded", false); //
         try
         {
             if (request.containsKey("id"))
             {
-                response = getComponentColor(Integer.parseInt(request.get("id")));
+                int id = Integer.parseInt(request.get("id"));
+                response.put("id", id);
+                response.put("color", getComponentColor(id));
+                response.put("succeeded", true);
             }
         }
         catch (Exception e)
         {
-            // TODO: Figure out how to handle empty queries, for now they end up here
             System.out.println("RequestHandler: Encountered an exception: " + e);
         }
-        
+
+        String responseString = response.toString();
         exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
-        exchange.sendResponseHeaders(200, response.length());
+        exchange.sendResponseHeaders(200, responseString.length());
         OutputStream os = exchange.getResponseBody();
-        os.write(response.getBytes());
+        os.write(responseString.getBytes());
         os.close();
     }
 

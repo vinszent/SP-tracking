@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import com.sun.net.httpserver.HttpServer;
 
 /* The following jar files were used when compiling with 'javac -cp 'jars/*':. DBService.java':
-json-simple-1.1.1.jar
+json-20160810.jar
 kafka-clients-0.10.2.0.jar
 postgresql-42.0.0.jar
 slf4j-api-1.7.25.jar
@@ -50,7 +50,7 @@ public class DBService
 
         RequestHandler requestHandler = new RequestHandler(dbUrl, dbUsername, dbPassword);
         HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/request", requestHandler);
+        server.createContext("/root", requestHandler);
         server.start();
 
         String kafkaUrl = "localhost:9092";
