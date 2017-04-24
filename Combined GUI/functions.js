@@ -1,11 +1,11 @@
-//Should really make a Section class that all the others can extend
-//instead of re-writing the same code over and over
-//Maybe have a get pos() which returns a vector/point [x,y]
-//as a complement to the x and y parameters
+// Should really make a Section class that all the others can extend
+// instead of re-writing the same code over and over
+// Maybe have a get pos() which returns a vector/point [x,y]
+// as a complement to the x and y parameters
 
 // TODO: Check for empty arrays before looping through them.
 
-//Component is a component going through the cell
+// Component is a component going through the cell
 class Component{
 
   constructor(x, y) {
@@ -669,7 +669,7 @@ var menuID = null
 var IOID = null
 
 // Should we model the cell or just update it
-var cellModel = false;
+var modelCell = false;
 
 //Mouse position on the canvas
 var mousePosMap = [-1,-1]
@@ -748,12 +748,20 @@ function init() {
   robs[0].target = [stops[0].x, stops[0].y]
 
   sensors.push(new Sensor())
+  sensors.push(new Sensor())
   sensors[0].monitorSection(stops[0])
   sensors[0].id = "camera_1"
+  sensors[1].monitorSection(stops[1])
+  sensors[1].id = "camera_2"
 
+  comps.push(new Component());
   comps.push(new Component());
   comps[0].switchSection(convs[0]);
   comps[0].id = "C1";
+  comps[0].color = "yellow";
+  comps[1].switchSection(convs[1]);
+  comps[1].id = "C9";
+  comps[1].color = "green";
 }
 
 //NOT USED
@@ -934,7 +942,7 @@ function checkIO() {
 //Runing both animation and IO
 function run() {
   if (!running) {
-    if (cellModel) {
+    if (modelCell) {
       animateCell()
       animationID = window.setInterval(animateCell, 33)
     } else {

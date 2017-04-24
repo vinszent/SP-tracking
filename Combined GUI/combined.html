@@ -55,7 +55,10 @@
         <script language="javascript">
          /* Input IP of websocket host*/
          /* var host = "ws://echo.websocket.org/";*/
-         var host = "ws://192.168.0.131:9001/websocket/kafka";
+         // Local standin host
+         var host = "ws://127.0.0.1:8765/";
+         // Actual host in system
+         //var host = "ws://192.168.0.131:9001/websocket/kafka";
          var ws = new WebSocket(host);
          ws.onopen = function(e) {onOpen(ws)};
          ws.onmessage = function(e) {onMessage(e)};
@@ -80,8 +83,9 @@
                  // Update map 
                  // Make sure that the components have the correct ID
                  var sens = getByID(j.camera);
-                 if (sens !== null) {
-                     sens.detectedComp(j.payload);
+                 payloadID = "C" + j.payload;
+                 if (sens !== null && getByID(payloadID) !== null) {
+                     sens.detectedComp(payloadID);
                  }
              }
 

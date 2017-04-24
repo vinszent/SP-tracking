@@ -741,6 +741,9 @@ robs[0].target = [stops[0].x, stops[0].y]
 
 sensors.push(new Sensor())
 sensors[0].monitorSection(stops[0])
+
+comps.push(new Component());
+comps[0].switchSection(convs[0]);
 }
 
 //NOT USED
