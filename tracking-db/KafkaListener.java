@@ -5,9 +5,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.*;
 
 public class KafkaListener extends Thread
 {
@@ -34,7 +32,6 @@ public class KafkaListener extends Thread
 
     public void run()
     {
-        JSONParser parser = new JSONParser();
         while (true)
         {
             ConsumerRecords<String, String> records = consumer.poll(500);
@@ -42,9 +39,9 @@ public class KafkaListener extends Thread
             {
                 try
                 {
-                    JSONObject obj = (JSONObject) parser.parse(record.value());
+                    JSONObject obj = new JSONObject(record.value());
 
-                    if (!obj.containsKey("resource")) continue; // Skip if not data
+                    if (!obj.has("resource")) continue; // Skip if not data
 
                     // Example of JSON: {"resource" : "camera", "payload" : 6, "time" : "666"}
                     // TODO: Handle all difference kinds of data
@@ -52,7 +49,7 @@ public class KafkaListener extends Thread
                     
                     switch (res) {
                         case "camera":
-                            int id = ((Long) obj.get("payload")).intValue();
+                            int id = obj.getInt("payload");
                             insertComponent(id, DBService.idToComponentColor(id));
                             System.out.printf("KafkaListener: A component with id %d was added to the database.\n", id);
                             break;
