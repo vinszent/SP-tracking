@@ -39,7 +39,7 @@ public class DBService
         else if (9 <= id && id <= 16) return "green";
         else if (17 <= id && id <= 24) return "blue";
         else if (25 <= id && id <= 32) return "red";
-        else return "titanium white";
+        else return "titanium hwite";
     }
     
     public static void main(String[] args) throws Exception

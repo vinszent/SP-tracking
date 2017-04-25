@@ -2,6 +2,8 @@ CREATE TABLE Orders (
   id INT PRIMARY KEY
 );
 
+INSERT INTO Orders VALUES (0);
+
 CREATE TABLE Components (
   id INT PRIMARY KEY,
   color TEXT
@@ -32,11 +34,14 @@ CREATE TABLE TrackingEvents (
 );
 
 CREATE TABLE ComponentsInTrackingEvents (
-  comp_id INT,
   order_id INT,
+  comp_id INT,
   camera_id INT,
   time BIGINT,
+  x_coord INT,
+  y_coord INT,
   PRIMARY KEY (comp_id, order_id, camera_id, time),
+  FOREIGN KEY (order_id) REFERENCES Orders(id),
   FOREIGN KEY (comp_id) REFERENCES Components(id),
   FOREIGN KEY (order_id, camera_id, time) REFERENCES TrackingEvents(order_id, camera_id, time)
 );
@@ -49,5 +54,5 @@ CREATE VIEW CurrentOrder AS (
   CASE WHEN (SELECT num FROM num_of_end_signals) >= 1
     THEN (SELECT MAX(id) FROM Orders) + 1
     ELSE (SELECT MAX(id) FROM Orders)
-  END
+  END AS current
 );
