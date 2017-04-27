@@ -19,6 +19,7 @@
 #define PLC_ADDRESS "172.16.205.11"
 #define PLC_RACK 0
 #define PLC_SLOT 1
+#define PLC_TICK 1
 
 #define KAFKA_BROKER_URI ""
 #define TOPIC_NAME "plc"
@@ -58,51 +59,40 @@ typedef struct
     gint64 address;
     PlcType type;
     gint bit;
-    gchar* comment;
 } SubscribeData;
 
 SubscribeData subscribe_arr[] =
 {
     /* H2 */
-    /* {135, 0, PLC_TYPE_BIT, 0}, */
-    /* {135, 0, PLC_TYPE_BIT, 1}, */
-    /* {135, 6, PLC_TYPE_BIT, 1}, */
+    {135, 2, PLC_TYPE_INT16},   /* H3.Up.Mode */
+    {135, 4, PLC_TYPE_INT16},   /* H3.Down.Mode */
 
     /* H3 */
-    /* {135, 0, PLC_TYPE_BIT, 0}, */
-    /* {135, 0, PLC_TYPE_BIT, 1}, */
-    /* {135, 6, PLC_TYPE_BIT, 1}, */
+    {140, 2, PLC_TYPE_INT16},   /* H3.Up.Mode */
+    {140, 4, PLC_TYPE_INT16},   /* H3.Down.Mode */
 
     /* R4 */
-    /* {128, 0, PLC_TYPE_BIT, 0}, */
-    /* {128, 0, PLC_TYPE_BIT, 1}, */
-    /* {128, 0, PLC_TYPE_BIT, 2}, */
-    /* {128, 0, PLC_TYPE_BIT, 3}, */
+    {128, 2, PLC_TYPE_INT16},   /* R4.PickBlock.Mode */
+    {128, 4, PLC_TYPE_INT16},   /* R4.PlaceBlock.Mode */
+    {128, 6, PLC_TYPE_INT16},   /* R4.ToHome.Mode */
+    {128, 8, PLC_TYPE_INT16},   /* R4.ToDodge.Mode */
+    {128, 10, PLC_TYPE_INT16},  /* R4.PickBlock/PlaceBlock.Mode */
 
     /* R5 */
-    /* {132, 0, PLC_TYPE_BIT, 0}, */
-    /* {132, 0, PLC_TYPE_BIT, 1}, */
-    /* {132, 0, PLC_TYPE_BIT, 2}, */
-    /* {132, 0, PLC_TYPE_BIT, 3}, */
+    {132, 2, PLC_TYPE_INT16},   /* R4.PickBlock.Mode */
+    {132, 4, PLC_TYPE_INT16},   /* R4.PlaceBlock.Mode */
+    {132, 6, PLC_TYPE_INT16},   /* R4.ToHome.Mode */
+    {132, 8, PLC_TYPE_INT16},   /* R4.ToDodge.Mode */
+    {132, 10, PLC_TYPE_INT16},  /* R4.PickBlock/PlaceBlock.Pos */
 
     /* R2 */
-    /* {126, 0, PLC_TYPE_BIT, 0}, */
-    /* {126, 0, PLC_TYPE_BIT, 1}, */
-    /* {126, 0, PLC_TYPE_BIT, 2}, */
-    /* {126, 0, PLC_TYPE_BIT, 3}, */
-    /* {126, 0, PLC_TYPE_BIT, 4}, */
-    /* {126, 0, PLC_TYPE_BIT, 5}, */
-    /* {126, 0, PLC_TYPE_BIT, 6}, */
-    /* {126, 0, PLC_TYPE_BIT, 7}, */
-    {126, 2, PLC_TYPE_INT16, 0, "R2: Elevator 2 to home table"},
-    /*{126, 4, PLC_TYPE_INT16, 0, NULL}, NOT USED */
-    {126, 6, PLC_TYPE_INT16, 0, "R2: Home table to elevator 2"},
-    {126, 8, PLC_TYPE_INT16, 0},
-    {126, 10, PLC_TYPE_INT16, 0},
-    {126, 12, PLC_TYPE_INT16, 0},
-    {126, 14, PLC_TYPE_INT16, 0},
-    {126, 16, PLC_TYPE_INT16, 0},
-    {126, 18, PLC_TYPE_INT16, 0},
+    {126, 2, PLC_TYPE_INT16, 0},  /* R2.Elevator2ToHomeTable.Mode */
+    {126, 6, PLC_TYPE_INT16, 0},  /* R2.HomeTableToElevator3.Mode */
+    {126, 10, PLC_TYPE_INT16, 0}, /* R2.PlaceAtPos.Mode */
+    {126, 12, PLC_TYPE_INT16, 0}, /* R2.PickAtPos.Mode */
+    {126, 14, PLC_TYPE_INT16, 0}, /* R2.DeliverTower.Mode */
+    {126, 16, PLC_TYPE_INT16, 0}, /* R2.PickBuildPlate.Mode */
+    {126, 18, PLC_TYPE_INT16, 0}, /* R2.PickAtPos.Pos */
 
     /* Flexlink */
 };
@@ -236,15 +226,15 @@ producer_thread_func(gpointer data)
                 }
             }
 
-            g_print("JSON %s\n", json);
+            /* g_print("JSON %s\n", json); */
 
-            /* rd_kafka_produce(producer_topic, PARTITION_NUMBER, RD_KAFKA_MSG_F_FREE, */
-            /*     json, strlen(json), NULL, 0, NULL); */
+            rd_kafka_produce(producer_topic, PARTITION_NUMBER, RD_KAFKA_MSG_F_FREE,
+                json, strlen(json), NULL, 0, NULL);
         }
 
-        g_print("\n");
+        /* g_print("\n"); */
 
-        g_usleep(G_USEC_PER_SEC);
+        g_usleep(G_USEC_PER_SEC * PLC_TICK);
     }
 
     return NULL;
