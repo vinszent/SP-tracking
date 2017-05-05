@@ -8,7 +8,7 @@
 #define BROKER_URI "192.168.0.131:9092"
 #define TOPIC_NAME "qr-tracking"
 #define PARTITION_NUMBER 0
-/* #define QR_JSON "{\"camera\" : \"%s\", \"time\" : \"%ld\", \"payload\" : \"%s\", \"corners\" : [{\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}]}" */
+#define QR_JSON_CORNERS "{\"camera\" : \"%s\", \"time\" : \"%ld\", \"payload\" : \"%s\", \"corners\" : [{\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}, {\"x\" : %d, \"y\" : %d}]}"
 #define QR_JSON "{\"camera\" : \"%s\", \"time\" : \"%lu\", \"payload\" : \"%s\"}"
 #define TMP_CAMERA_ID "camera_1"
 #define IMAGE_WIDTH 640
@@ -71,10 +71,16 @@ main(int argc, char** argv)
             char json[1000];
             time_t time_stamp = time(NULL);
 
-            printf("Decoded %s symbol '%s'\n",
-                zbar_get_symbol_name(type), payload);
-
-            sprintf(json, QR_JSON, TMP_CAMERA_ID, time_stamp, payload);
+            if (zbar_symbol_get_loc_size(symbol)  == 4)
+            {
+                sprintf(json, QR_JSON_CORNERS, TMP_CAMERA_ID, time_stamp, payload,
+                    zbar_symbol_get_loc_x(symbol, 0), zbar_symbol_get_loc_y(symbol, 0),
+                    zbar_symbol_get_loc_x(symbol, 1), zbar_symbol_get_loc_y(symbol, 1),
+                    zbar_symbol_get_loc_x(symbol, 2), zbar_symbol_get_loc_y(symbol, 2),
+                    zbar_symbol_get_loc_x(symbol, 3), zbar_symbol_get_loc_y(symbol, 3));
+            }
+            else
+                sprintf(json, QR_JSON, TMP_CAMERA_ID, time_stamp, payload);
 
             rd_kafka_produce(topic, PARTITION_NUMBER, RD_KAFKA_MSG_F_COPY,
                 json, strlen(json), NULL, 0, NULL);
