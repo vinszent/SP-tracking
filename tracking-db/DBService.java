@@ -54,9 +54,9 @@ public class DBService
         server.start();
 
         String kafkaUrl = "localhost:9092";
-        String topic = "tracking-data";
+        List topics = Arrays.asList("qr-tracking", "plc-tracking");
         
-        KafkaListener kl = new KafkaListener(kafkaUrl, topic, dbUrl, dbUsername, dbPassword);
+        KafkaListener kl = new KafkaListener(kafkaUrl, topics, dbUrl, dbUsername, dbPassword);
         kl.start();
     }
 }
