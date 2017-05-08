@@ -36,6 +36,7 @@ public class RequestHandler implements HttpHandler {
         
         int compId, orderId;
         List<Object[]> history;
+        JSONArray times, resources, actions;
         try
         {
             switch (requestType) {
@@ -49,8 +50,8 @@ public class RequestHandler implements HttpHandler {
                 case "cycletime":
                     orderId = Integer.parseInt(request.get("orderId"));
                     long cycleTime = getCycleTime(orderId);
-                    response.put("orderId", orderId);
                     response.put("cycleTime", cycleTime);
+                    response.put("orderId", orderId);
                     response.put("succeeded", true);
                     break;
 
@@ -58,24 +59,36 @@ public class RequestHandler implements HttpHandler {
                     orderId = Integer.parseInt(request.get("orderId"));
                     compId = Integer.parseInt(request.get("compId"));
                     history = getComponentHistory(orderId, compId);
+                    times = new JSONArray();
+                    resources = new JSONArray();
+                    actions = new JSONArray();
                     for (Object[] o : history)
                     {
-                        response.accumulate("times", o[0]);
-                        response.accumulate("resources", o[1]);
-                        response.accumulate("actions", o[2]);
+                        times.put(o[0]);
+                        resources.put(o[1]);
+                        actions.put(o[2]);
                     }
+                    response.put("times", times);
+                    response.put("resources", resources);
+                    response.put("actions", actions);
                     response.put("succeeded", true);
                     break;
 
                 case "orderHistory":
                     orderId = Integer.parseInt(request.get("orderId"));
                     history = getOrderHistory(orderId);
+                    times = new JSONArray();
+                    resources = new JSONArray();
+                    actions = new JSONArray();
                     for (Object[] o : history)
                     {
-                        response.accumulate("times", o[0]);
-                        response.accumulate("resources", o[1]);
-                        response.accumulate("actions", o[2]);
+                        times.put(o[0]);
+                        resources.put(o[1]);
+                        actions.put(o[2]);
                     }
+                    response.put("times", times);
+                    response.put("resources", resources);
+                    response.put("actions", actions);
                     response.put("succeeded", true);
                     break;
 
@@ -86,20 +99,25 @@ public class RequestHandler implements HttpHandler {
 
                 case "orders":
                     List<Integer> orders = getOrders();
+                    JSONArray ordersArray = new JSONArray();
                     for (Integer i : orders)
                     {
-                        response.accumulate("orders", i.intValue());
+                        ordersArray.put(i.intValue());
                     }
+                    response.put("orders", ordersArray);
                     response.put("succeeded", true);
                     break;
 
                 case "components":
                     orderId = Integer.parseInt(request.get("orderId"));
                     List<Integer> components = getComponents(orderId);
+                    JSONArray componentsArray = new JSONArray();
                     for (Integer i : components)
                     {
-                        response.accumulate("orders", i.intValue());
+                        componentsArray.put(i.intValue());
                     }
+                    response.put("components", componentsArray);
+                    response.put("orderId", orderId);
                     response.put("succeeded", true);
                     break;
 
@@ -187,7 +205,7 @@ public class RequestHandler implements HttpHandler {
         {
             Object[] o = new Object[3];
             o[0] = result.getLong("time");
-            o[1] = "Camera" + result.getInt("camera_id");
+            o[1] = result.getString("camera_id");
             o[2] = "spotted";
             history.add(o);
         }
@@ -197,10 +215,11 @@ public class RequestHandler implements HttpHandler {
         /* Currently, we assume most events happen once for each pallet.
            So, figure out which of the two pallets the component is on, and then
            get either the first or last executing step of each event. */
-        statement = dbConn.prepareStatement("SELECT x_coord, y_coord, MAX(time) AS time FROM ComponentsInTrackingEvents WHERE order_id = ? AND comp_id = ? AND camera_id = 'camera_1'");
+        statement = dbConn.prepareStatement("SELECT x_coord, y_coord, time FROM ComponentsInTrackingEvents WHERE order_id = ? AND comp_id = ? AND camera_id = 'camera_1' ORDER BY time DESC LIMIT 1");
         statement.setInt(1, orderId);
         statement.setInt(2, compId);
         result = statement.executeQuery();
+        result.next();
         int xCoord = result.getInt("x_coord");
         int yCoord = result.getInt("y_coord");
         long lastCamTime = result.getLong("time");
@@ -303,7 +322,7 @@ public class RequestHandler implements HttpHandler {
         return history;
     }
 
-        private List<Object[]> getOrderHistory(int orderId) throws SQLException
+    private List<Object[]> getOrderHistory(int orderId) throws SQLException
     {
         PreparedStatement statement;
         ResultSet result;
@@ -315,12 +334,12 @@ public class RequestHandler implements HttpHandler {
         statement = dbConn.prepareStatement("SELECT resource, action, state, time FROM PLCEvents NATURAL JOIN PSL ORDER BY resource, action, time ASC");
         result = statement.executeQuery();
         
-        String state, oldState;
-        state = oldState = "";
+        int state, oldState;
+        state = oldState = 0;
         while (result.next())
         {
-            state = result.getString("state");
-            if (state.equals("EXECUTING") && !oldState.equals("EXECUTING"))
+            state = result.getInt("state");
+            if (state == 2 && oldState != 2)
             {
                 Object[] o = new Object[3];
                 o[0] = result.getLong("time");
