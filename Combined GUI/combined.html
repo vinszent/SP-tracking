@@ -1,58 +1,85 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" type="text/css" href="./style.css">
-    </head>
-    <body>
-        <div id="maindiv">
-            <div id="ganttdiv">
-                <canvas id="ganttCanvas" style="border:1px solid #000000"></canvas>
+  <head>
+      <meta charset="UTF-8">
+      <link rel="stylesheet" type="text/css" href="./style.css">
+  </head>
+  <body>
+    <div id="maindiv">
+      <div id="rightside">
+	<div id="ganttdiv">
+          <canvas id="ganttCanvas" style="border:1px solid #000000"></canvas>
+	
+	  
+          <div>
+            <button id="startButton">Start</button>
+            <button id="resetButton">Reset</button>
+            <button id="stopButton">Stop</button>
+          </div>
+	</div>
+      </div>
+      <div id="leftside">
+	<div id="displaydiv">
+	  <div id="displays">
+            <canvas id="mapcanvas" height="400"></canvas>
+	    <div id="traydiv"></div>
+	  </div>
+          <div id="selectionmenu">
+	    <div id="firstselection">
+              <div class="menubutton" id="canvasbutton" onmousedown="setManualAddType('conveyor',this);">Conveyor</div>
+              <div class="menubutton" id="elevatorbutton" onmousedown="setManualAddType('stop',this);">Elevator</div>
+              <div class="menubutton" id="robotbutton" onclick="">Robot</div>
+              <div class="menubutton" id="editbutton" onclick="">Edit</div>
+              <div class="menubutton" id="removebutton" onclick="">Remove</div>
+              <div class="menubutton" id="linkbutton" onclick="linkObjects('link', this)">Link</div>
+              <div class="menubutton" id="savebutton" onclick="initSave()">Save</div>
+              <div class="menubutton" id="loadbutton" onclick="initLoad()">Load</div>
+	    </div>
+	    <div id="secondselection">
+              <button onclick="run()">RUN</button>
+              <!-- <button onclick="startAnimation()">DRAW</button> -->
+              <button onclick="stopAnimation()">STOP</button>
+              <button onclick="addComponent()">ADD</button>
+              <button onclick="clearAll()">CLEAR</button>
+	    </div>
+          </div>
+	</div>
+	
+	<div id="cellinfo">
+          <p id="idfield">NaN</p>
+          <p id="birthfield">NaN</p>
+	</div>
+	<br>
+	<div id="selectedobjectinfo">
+          
+	</div>
+	<div id="log">
+	  <button id="fullorderbtn" class="requestbtn">All info</button>
+	  <button id="orderbtn" class="requestbtn">All orders</button>
+	  <div id="tables">
+	    <div id="orderdiv">
+	      <div id="orderlist" class="tablediv"></div>
+	      <div id="orderhistory" class="tablediv"></div>
+	    </div>
+	    <div id="componentdiv">
+	      <div id="componentlist" class="tablediv"></div>
+	      <div id="componenthistory" class="tablediv"></div>
+	    </div>
+	  </div>
+	</div>
+      </div>
+    </div>
 
-                <div>
-                    <button id="startButton">Start</button>
-                    <button id="resetButton">Reset</button>
-                    <button id="stopButton">Stop</button>
-                </div>
-            </div>
-            <div id="displaydiv">
-                <canvas id="mapcanvas" width="700" height="400""></canvas>
-                <div id="selectionmenu">
-                  <div class="menubutton" id="canvasbutton" onmousedown="setManualAddType('conveyor',this);">Conveyor</div>
-                  <div class="menubutton" id="elevatorbutton" onmousedown="setManualAddType('stop',this);">Elevator</div>
-                  <div class="menubutton" id="robotbutton" onclick="">Robot</div>
-                  <div class="menubutton" id="editbutton" onclick="">Edit</div>
-                  <div class="menubutton" id="removebutton" onclick="">Remove</div>
-                  <div class="menubutton" id="linkbutton" onclick="linkObjects('link', this)">Link</div>
-                  <div class="menubutton" id="savebutton" onclick="initSave()">Save</div>
-                  <div class="menubutton" id="loadbutton" onclick="initLoad()">Load</div>
-                </div>
-              </div>
-              <div>
-                <button onclick="run()">RUN</button>
-                <!-- <button onclick="startAnimation()">DRAW</button> -->
-                <button onclick="stopAnimation()">STOP</button>
-                <button onclick="addComponent()">ADD</button>
-                <button onclick="clearAll()">CLEAR</button>
-              </div>
-              <div id="cellinfo">
-                <p id="idfield">NaN</p>
-                <p id="birthfield">NaN</p>
-              </div>
-              <br>
-              <div id="selectedobjectinfo">
-                
-              </div>
-            </div>
-        </div>
-        
-        <script language="javascript" src="./gantt.js"></script>
-        
-        <script language="javascript">
+
+    <script language="javascript" src="./gantt.js"></script>
+    <script type="text/javascript" src="./map.js"></script>
+    <script type="text/javascript" src="./KPI.js"></script>
+    <script language="javascript">
          var gc = new GanttCanvas("ganttCanvas");
-        </script>
+	 var kpi = showKPI();
+    </script>
 
-        <script language="javascript">
+    <script language="javascript">
          /* Input IP of websocket host*/
          /* var host = "ws://echo.websocket.org/";*/
          // Local standin host
@@ -68,7 +95,7 @@
          }
          
          function onMessage(e) {
-             console.log(e);
+             //console.log(e);
              var j = JSON.parse(e.data);
              if (typeof j.payload != "undefined") { // Assume correct data
                  if (j.payload >= 1 && j.payload <= 8)
@@ -83,9 +110,9 @@
                  // Update map 
                  // Make sure that the components have the correct ID
                  var sens = getByID(j.camera);
-                 payloadID = "C" + j.payload;
-                 if (sens !== null && getByID(payloadID) !== null) {
-                     sens.detectedComp(payloadID);
+                 
+                 if (sens !== null) {
+                     sens.detectedComp(j.payload, j.timestamp);
                  }
              }
 
@@ -103,7 +130,7 @@
          document.getElementById("startButton").onclick = function() {gc.start(new Date().getTime())};
          document.getElementById("resetButton").onclick = function() {gc.reset()};
          document.getElementById("stopButton").onclick = function() {debugger};
-        </script>
-        <script type="text/javascript" src="./functions.js"></script>
-    </body>
+						    </script>
+        
+  </body>
 </html>

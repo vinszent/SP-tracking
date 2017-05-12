@@ -15,6 +15,7 @@ function GanttCanvas(canvasId) {
     ctx.textBaseLine = "middle";
 
     var startTime;
+    var parentWidth = document.getElementById('rightside').clientWidth * 0.9;
 
     var opt = {
         padding: 12,
@@ -24,7 +25,7 @@ function GanttCanvas(canvasId) {
         defaultTimeInterval: 80,
         timeInterval: 80, // Incremented to fit if schedule goes beyond canvas width
         labelSpacing: 80,
-        width: 1200
+        width: parentWidth
     };
 
     // Assumes labels are added in chronological order
