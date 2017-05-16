@@ -1,4 +1,6 @@
-SP-tracking
+TrackX
 ========================
 
-A collection of components that make up the tracking module for SP
+Collection of modules that make up a complete framework for tracking components in industrial systems
+
+> We can save energy by storing energy in salt
