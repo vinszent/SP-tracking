@@ -25,7 +25,7 @@
     width: 45%;
     display: inline-block;
     height: 400px;
-    background-color: cadetblue;
+    background-color: aliceblue;
 }
 
 #displays {
@@ -129,7 +129,7 @@ table {
     /* font-family: arial, sans-serif; */
     border-collapse: collapse;
     background-color: white;
-    table-layout: fixed;
+    /*table-layout: fixed;*/
     width: 100%;
 }
 
