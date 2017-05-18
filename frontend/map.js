@@ -4,6 +4,8 @@
 // as a complement to the x and y parameters
 
 // TODO: Check for empty arrays before looping through them.
+
+// Runs when program starts
 function canvasSetup(){
     var c = document.getElementById("mapcanvas");
     c.width = c.parentNode.clientWidth/2;
@@ -826,9 +828,21 @@ class Sensor{
     }
 
     monitorSection(section) {
-	this.section = section;
-	this.x = section.x;
-	this.y = section.y;
+	switch (section.type) {
+	case 'stop':
+	    this.section = section;
+	    this.x = section.x;
+	    this.y = section.y;
+	    break;
+	case 'robotarm':
+	    this.section = section;
+	    this.x = section.tx;
+	    this.y = section.ty;
+	    break;
+	default:
+	    console.log("Can't monitor section of type " + section.type);
+	    break;
+	}
     }
 
     // If we identify a component, we move it here
@@ -1035,10 +1049,16 @@ function init() {
 
     sensors.push(new Sensor())
     sensors.push(new Sensor())
+    sensors.push(new Sensor())
+    sensors.push(new Sensor())
     sensors[0].monitorSection(stops[0])
     sensors[0].id = "camera_1"
-    sensors[1].monitorSection(stops[1])
+    sensors[1].monitorSection(robs[0])
     sensors[1].id = "camera_2"
+    sensors[2].monitorSection(stops[2])
+    sensors[2].id = "camera_3"
+    sensors[3].monitorSection(stops[4])
+    sensors[3].id = "camera_4"
 }
 
 //NOT USED
