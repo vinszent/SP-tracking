@@ -48,12 +48,15 @@ public class DBService
         String dbUsername = "username";
         String dbPassword = "password";
 
+        String hostIP = "0.0.0.0";
+
         RequestHandler requestHandler = new RequestHandler(dbUrl, dbUsername, dbPassword);
-        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
-        server.createContext("/root", requestHandler);
+        
+        HttpServer server = HttpServer.create(new InetSocketAddress(hostIP, 8000), 0);
+        server.createContext("/", requestHandler);
         server.start();
 
-        String kafkaUrl = "localhost:9092";
+        String kafkaUrl = hostIP + ":9092";
         List topics = Arrays.asList("qr-tracking", "plc-tracking");
         
         KafkaListener kl = new KafkaListener(kafkaUrl, topics, dbUrl, dbUsername, dbPassword);

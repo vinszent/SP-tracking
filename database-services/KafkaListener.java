@@ -142,10 +142,11 @@ public class KafkaListener extends Thread
                             if (datablock == 126 && address == 14 && state == 2)
                                 endIsNear = true;
 
-                            if (datablock == 126 && address == 14 && state != 2 && endIsNear) // If done delivering the tower
+                            if (datablock == 126 && address == 14 && state != 2 && endIsNear)
                             {
                                 orderId += 1;
                                 insertOrder(orderId);
+                                endIsNear = false;
                             }
                             
                             insertPLCState(orderId, datablock, address, time, null, (Integer) value);
@@ -212,7 +213,7 @@ public class KafkaListener extends Thread
 
     private void insertPLCState(int orderId, int datablock, double address, long time, Boolean signal, Integer state) throws SQLException
     {
-        PreparedStatement statement = dbConn.prepareStatement("INSERT INTO PLC VALUES (?, ?, ?, ?, ?, ?)");
+        PreparedStatement statement = dbConn.prepareStatement("INSERT INTO PLCEvents VALUES (?, ?, ?, ?, ?, ?)");
         statement.setInt(1, orderId);
         statement.setInt(2, datablock);
         statement.setDouble(3, address);

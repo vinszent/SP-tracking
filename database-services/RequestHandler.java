@@ -21,7 +21,7 @@ public class RequestHandler implements HttpHandler {
     public void handle(HttpExchange exchange) throws IOException
     {
         String query = exchange.getRequestURI().getQuery();
-            
+        
         Map<String, String> request = new HashMap<>();
         for (String pair : query.split("&"))
         {
@@ -89,6 +89,7 @@ public class RequestHandler implements HttpHandler {
                     response.put("times", times);
                     response.put("resources", resources);
                     response.put("actions", actions);
+                    response.put("orderId", orderId);
                     response.put("succeeded", true);
                     break;
 
@@ -127,7 +128,7 @@ public class RequestHandler implements HttpHandler {
         }
         catch (Exception e)
         {
-            System.out.println("RequestHandler: Encountered an exception: " + e);
+            System.out.println("RequestHandler encountered an exception: " + e);
         }
 
         String responseString = response.toString();
@@ -215,31 +216,41 @@ public class RequestHandler implements HttpHandler {
         /* Currently, we assume most events happen once for each pallet.
            So, figure out which of the two pallets the component is on, and then
            get either the first or last executing step of each event. */
-        statement = dbConn.prepareStatement("SELECT x_coord, y_coord, time FROM ComponentsInTrackingEvents WHERE order_id = ? AND comp_id = ? AND camera_id = 'camera_1' ORDER BY time DESC LIMIT 1");
-        statement.setInt(1, orderId);
-        statement.setInt(2, compId);
-        result = statement.executeQuery();
-        result.next();
-        int xCoord = result.getInt("x_coord");
-        int yCoord = result.getInt("y_coord");
-        long lastCamTime = result.getLong("time");
-        
-        statement = dbConn.prepareStatement("SELECT MIN(time) AS time first FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND resource = 'H2' AND action = 'up' AND state = 2");
-        statement.setInt(1, orderId);
-        result = statement.executeQuery();
-        long firstElevatorTime = result.getLong("time");
 
-        boolean first = false; // Used to decide which events apply to the component
-        if (lastCamTime < firstElevatorTime)
+        boolean first = true;
+        int xCoord, yCoord;
+        xCoord = yCoord = 0;
+        try
         {
-            first = true;
+            statement = dbConn.prepareStatement("SELECT x_coord, y_coord, time FROM ComponentsInTrackingEvents WHERE order_id = ? AND comp_id = ? AND camera_id = 'camera_1' ORDER BY time DESC LIMIT 1");
+            statement.setInt(1, orderId);
+            statement.setInt(2, compId);
+            result = statement.executeQuery();
+            result.next();
+            xCoord = result.getInt("x_coord");
+            yCoord = result.getInt("y_coord");
+            long lastCamTime = result.getLong("time");
+
+            statement = dbConn.prepareStatement("SELECT MIN(time) AS time FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND resource = 'H2' AND action = 'up' AND state = 2");
+            statement.setInt(1, orderId);
+            result = statement.executeQuery();
+            result.next();
+            long firstElevatorTime = result.getLong("time");
+
+            if (lastCamTime < firstElevatorTime)
+                first = true;
+            else
+                first = false;
+        }
+        catch (SQLException e)
+        {
+            System.out.println("RequestHandler caught an exception while computing a component's pallet position: " + e);
         }
 
         // Get the bulk of the system events
         String minOrMax = first ? "MIN" : "MAX";
-        statement = dbConn.prepareStatement("SELECT ?(time) AS time, resource, action FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND state = 2 AND resource NOT IN ('R4', 'R5') GROUP BY resource, action");
-        statement.setString(1, minOrMax);
-        statement.setInt(2, orderId);
+        statement = dbConn.prepareStatement("SELECT {}(time) AS time, resource, action FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND state = 2 AND resource NOT IN ('R4', 'R5') GROUP BY resource, action".replace("{}", minOrMax));
+        statement.setInt(1, orderId);
         result = statement.executeQuery();
         while (result.next())
         {
@@ -286,15 +297,19 @@ public class RequestHandler implements HttpHandler {
             pickPosition2 = 30 + palletPosition;
         }
 
-        statement = dbConn.prepareStatement("SELECT MIN(time) AS time FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND resource = ? AND action = pickBlock.pos AND state IN (?, ?)");
+        // Get the time that the build robot targeted the relevant pallet position
+        statement = dbConn.prepareStatement("SELECT MIN(time) AS time FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND resource = ? AND action = 'pickBlock.pos' AND state IN (?, ?)");
         statement.setInt(1, orderId);
         statement.setString(2, buildResource);
         statement.setInt(3, pickPosition1);
         statement.setInt(4, pickPosition2);
         result = statement.executeQuery();
-        long buildStartTime = result.getLong("time");
-        
-        statement = dbConn.prepareStatement("SELECT MIN(time) AS time, resource, action FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND time > ? AND resource = ? AND action IN ('pickBlock', 'placeBlock') AND state = 2");
+        long buildStartTime = Long.MAX_VALUE;
+        if (result.next())
+            buildStartTime = result.getLong("time");
+
+        // Get the relevant pick and place block actions
+        statement = dbConn.prepareStatement("SELECT MIN(time) AS time, resource, action FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? AND time > ? AND resource = ? AND action IN ('pickBlock', 'placeBlock') AND state = 2 GROUP BY resource, action");
         statement.setInt(1, orderId);
         statement.setLong(2, buildStartTime);
         statement.setString(3, buildResource);
@@ -330,8 +345,9 @@ public class RequestHandler implements HttpHandler {
         // The Object arrays are of the form {(long)time, "resource", "action"}
         List<Object[]> history = new ArrayList<>();
 
-        // Get all the seperately executed events in the order
-        statement = dbConn.prepareStatement("SELECT resource, action, state, time FROM PLCEvents NATURAL JOIN PSL ORDER BY resource, action, time ASC");
+        // Get all relevant, seperately executed events
+        statement = dbConn.prepareStatement("SELECT resource, action, state, time FROM PLCEvents NATURAL JOIN PSL WHERE order_id = ? ORDER BY resource, action, time ASC");
+        statement.setInt(1, orderId);
         result = statement.executeQuery();
         
         int state, oldState;
