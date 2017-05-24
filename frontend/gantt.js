@@ -86,13 +86,13 @@ function GanttCanvas(canvasId) {
             
         } else {
 
-            if (labelIn != "true") { // Assume we are leaving the current label
+            // if (labelIn != "true") { // Assume we are leaving the current label
                 c.labels[c.cur].times[1] = new Date().getTime();
                 
                 console.log("Component %s left %s.", componentId, c.labels[c.cur].id);
 
                 c.cur += 1;
-            }
+            // }
             
         }
     }
