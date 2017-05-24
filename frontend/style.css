@@ -129,7 +129,7 @@ table {
     /* font-family: arial, sans-serif; */
     border-collapse: collapse;
     background-color: white;
-    /*table-layout: fixed;*/
+    table-layout: fixed;
     width: 100%;
 }
 

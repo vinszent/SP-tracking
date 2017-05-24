@@ -2,10 +2,6 @@
 function showKPI() {
     console.log("Starting stuff up");
 
-    function createTable(parentNodeId, tableHeaders, data) {
-	// Place holder
-    }
-
     document.getElementById('fullorderbtn').onclick = function() {
 	makeQuery(makeUrl('fullUpdate'), responseHandler);
     };
@@ -28,8 +24,8 @@ function showKPI() {
 // 
 // ###########################################################
 
-//var serverAddress = "http://192.168.0.141:8000/root"
-var serverAddress = "http://localhost:8000"
+var serverAddress = "http://172.16.205.74:8000/root"
+//var serverAddress = "http://localhost:8000"
 
 function makeQuery(getUrl, callback)
 {
@@ -37,9 +33,9 @@ function makeQuery(getUrl, callback)
     console.log(getUrl)
     var xmlHttp = new XMLHttpRequest();
     xmlHttp.onreadystatechange = function() {
-	console.log("State: " + this.readyState)
-	console.log("Status: " + this.status)
-	console.log("Status Text: " + this.statusText)
+//	console.log("State: " + this.readyState)
+//	console.log("Status: " + this.status)
+//	console.log("Status Text: " + this.statusText)
 	if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
 	    console.log("Status OK!");
 	    callback(xmlHttp.responseText);
@@ -78,6 +74,9 @@ function responseHandler(responseText) {
     case "componentHistory":
 	updateComponentHistory(response);
 	break;
+    case "cycletime":
+	updateCycletime(response);
+	break;
     default:
 	console.log("Unknown response type " + response.type);
 	console.log("Can't handle input data:");
@@ -115,8 +114,11 @@ function updateOrders(response) {
 	    makeQuery(makeUrl('components',
 			      this.childNodes[0].innerHTML),
 		      responseHandler);
+	    makeQuery(makeUrl('cycletime',
+			      this.childNodes[0].innerHTML),
+		      responseHandler);
 	});
-	
+	makeQuery(makeUrl('cycletime', orders[i]),responseHandler);
     }
     div.appendChild(table);
 }
@@ -181,17 +183,21 @@ function updateOrderHistory(response) {
     for (var i in times) {
 	var row = table.insertRow();
 	var cell = row.insertCell();
-	var datetime = new Date(0);
-	var splitTime = String(times[i]).split('.');
-	datetime.setUTCSeconds(splitTime[0], splitTime[1])
-	cell.innerHTML = ('Y-M-D h:m:s.k'
+	var datetime = new Date();
+	//var splitTime = String(times[i]).split('.');
+	datetime.setUTCSeconds(times[i]);
+	cell.innerHTML = ('Y-M-D h:m:s'
 			  .replace('Y', datetime.getFullYear())
 			  .replace('M', datetime.getMonth()+1)
 			  .replace('D', datetime.getDate())
-			  .replace('h', datetime.getHours())
-			  .replace('m', datetime.getMinutes())
-			  .replace('s', datetime.getSeconds())
-			  .replace('k', datetime.getMilliseconds()));
+			  .replace('h', datetime.getHours() < 10 ? '0' +
+				   datetime.getHours() : datetime.getHours())
+			  .replace('m', datetime.getMinutes() < 10 ? '0' +
+				   datetime.getMinutes() : datetime.getMinutes())
+			  .replace('s', datetime.getSeconds() < 10 ? '0' +
+				   datetime.getSeconds() : datetime.getSeconds())
+			  /*.replace('k', datetime.getMilliseconds())*/);
+
 	cell = row.insertCell();
 	cell.innerHTML = resources[i];
 	cell = row.insertCell();
@@ -228,17 +234,20 @@ function updateComponentHistory(response) {
     for (var i in times) {
 	var row = table.insertRow();
 	var cell = row.insertCell();
-	var datetime = new Date(0);
-	var splitTime = String(times[i]).split('.');
-	datetime.setUTCSeconds(splitTime[0], splitTime[1])
-	cell.innerHTML = ('Y-M-D h:m:s.k'
+	var datetime = new Date();
+	//var splitTime = String(times[i]).split('.');
+	datetime.setUTCSeconds(times[i]);
+	cell.innerHTML = ('Y-M-D h:m:s'
 			  .replace('Y', datetime.getFullYear())
 			  .replace('M', datetime.getMonth()+1)
 			  .replace('D', datetime.getDate())
-			  .replace('h', datetime.getHours())
-			  .replace('m', datetime.getMinutes())
-			  .replace('s', datetime.getSeconds())
-			  .replace('k', datetime.getMilliseconds()));
+			  .replace('h', datetime.getHours() < 10 ? '0' +
+				   datetime.getHours() : datetime.getHours())
+			  .replace('m', datetime.getMinutes() < 10 ? '0' +
+				   datetime.getMinutes() : datetime.getMinutes())
+			  .replace('s', datetime.getSeconds() < 10 ? '0' +
+				   datetime.getSeconds() : datetime.getSeconds())
+			  /*.replace('k', datetime.getMilliseconds())*/);
 	cell = row.insertCell();
 	cell.innerHTML = resources[i];
 	cell = row.insertCell();
@@ -247,6 +256,40 @@ function updateComponentHistory(response) {
 
     div.appendChild(table);
 }
+
+function updateCycletime(response) {
+    //Have to match the cycletime to the correct order in the table
+    var cycletime = response.cycletime < 0 ? 'Running '  +
+	-1*response.cycletime : response.cycletime ;
+    var orderId = response.orderId;
+    
+    var div = document.getElementById('orderlist');    
+    var table = document.getElementById('ordertable');
+    var topRow = table.childNodes[0].childNodes[0];
+    
+    if (topRow.childNodes.length < 2) {
+	var cycleTimeCell = topRow.insertCell();
+	cycleTimeCell.innerHTML = 'Cycle Time';
+    }
+    
+    //Loop through the table and find the corresponding ID
+    var trows = table.childNodes[0].childNodes;
+    for (var i = 1; i < trows.length; i++) {
+	var tcols = trows[i].childNodes;
+	var id = tcols[0].childNodes[0].data;
+	if (id == orderId) {
+	    if (tcols.length < 2) {
+		var cell = trows[i].insertCell();
+		cell.innerHTML = cycletime;
+	    } else {
+		tcols[1].innerHTML = cycletime;
+	    }
+	}
+    }
+}
+
+
+
 
 // For fullupdate, response is
 // {"requestType":"listorders",

@@ -83,9 +83,9 @@
          /* Input IP of websocket host*/
          /* var host = "ws://echo.websocket.org/";*/
          // Local standin host
-         var host = "ws://127.0.0.1:8765/";
+         //var host = "ws://127.0.0.1:8765/";
          // Actual host in system
-         //var host = "ws://192.168.0.131:9001/websocket/kafka";
+         var host = "ws://172.16.205.73:9001/websocket/kafka";
          var ws = new WebSocket(host);
          ws.onopen = function(e) {onOpen(ws)};
          ws.onmessage = function(e) {onMessage(e)};
@@ -95,7 +95,7 @@
          }
          
          function onMessage(e) {
-             //console.log(e);
+             console.log(e);
              var j = JSON.parse(e.data);
              if (typeof j.payload != "undefined") { // Assume correct data
                  if (j.payload >= 1 && j.payload <= 8)
@@ -112,7 +112,7 @@
                  var sens = getByID(j.camera);
                  
                  if (sens !== null) {
-                     sens.detectedComp(j.payload, j.timestamp);
+                     sens.detectedComp(j.payload, j.time);
                  }
              }
 

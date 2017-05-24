@@ -20,7 +20,7 @@ function GanttCanvas(canvasId) {
     var opt = {
         padding: 12,
         textPadding: 3,
-        rowHeight: 20,
+        rowHeight: 10,
         rowSpacing: 4,
         defaultTimeInterval: 80,
         timeInterval: 80, // Incremented to fit if schedule goes beyond canvas width

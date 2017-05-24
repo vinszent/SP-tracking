@@ -11,7 +11,7 @@ function canvasSetup(){
     c.width = c.parentNode.clientWidth/2;
 }
 
-canvasSetup();
+
 
 // Component is a component going through the cell
 class Component{
@@ -288,6 +288,10 @@ class Group{
             this.moveTo(newSection.x, newSection.y)
             newSection.addComp(this)
             break
+	case "robotarm":
+	    this.moveTo(newSection.tx, newSection.ty);
+	    newSection.addComp(this);
+	    break;
 	default:
             console.log("Component can not switch to section!")
             break
@@ -995,6 +999,7 @@ var linking = false
 
 //Initiate all stuff
 init();
+canvasSetup();
 
 //Initiate all stuff
 function init() {
@@ -1055,9 +1060,9 @@ function init() {
     sensors[0].id = "camera_1"
     sensors[1].monitorSection(robs[0])
     sensors[1].id = "camera_2"
-    sensors[2].monitorSection(stops[2])
+    sensors[2].monitorSection(stops[4])
     sensors[2].id = "camera_3"
-    sensors[3].monitorSection(stops[4])
+    sensors[3].monitorSection(stops[2])
     sensors[3].id = "camera_4"
 }
 
@@ -1750,20 +1755,20 @@ function correctGrouping(comp) {
     for (var i = 0; i < comps.length; i++) {
 	var skip = false;
 	var dt = comp.lastDetected - comps[i].lastDetected;
-	console.log( i + ". Comparing " + comp.id
-	    + " to " + comps[i].id)
+	//console.log( i + ". Comparing " + comp.id
+	//    + " to " + comps[i].id)
 	
 	if(comps[i] === comp){
-	    console.log("Skipping bcuz of same object");
+	    //console.log("Skipping bcuz of same object");
 	    skip = true;
 	}
 	if (comps[i].group === comp.group && comp.group !== null &&
 	    comp.group !== undefined) {
-	    console.log("Skipping bcuz of same group");
+	    //console.log("Skipping bcuz of same group");
 	    skip = true;
 	}
 	if (comp.lastDetectedBy !== comps[i].lastDetectedBy) {
-	    console.log("Skipping bcuz of not same camera");
+	    //console.log("Skipping bcuz of not same camera");
 	    console.log(comp.lastDetectedBy + " =/=" + comps[i].lastDetectedBy);
 	    skip = true;
 	}
@@ -1789,6 +1794,9 @@ function correctGrouping(comp) {
 		groups[groups.length - 1].copy(comp);
 		return;
 	    }
+	} else {
+	    //console.log('dt = ' + dt);
+	    // Split groups 
 	}
     }
 }
@@ -1811,7 +1819,7 @@ function getAng(x,y) {
     else if (x<0&&y>=0)
 	return Math.atan(x/y)
     else
-	return -1
+	return -999
 } 
 
 //Linear transforms
