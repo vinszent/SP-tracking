@@ -103,9 +103,32 @@
                  else
                      var labelColor = "green";
 
-                 var labelIn = (j.camera == "camera_1") ? "true" : "false";
+						    var labelIn = (j.camera == "camera_1") ? "true" : "false";
+						    
+						    var zone = '';
+						    switch(j.camera) {
+						    case "camera_1":
+						    zone = "Pickup Zone";
+						    labelIn = "true";
+						    break;
+						    case "camera_2":
+						    zone = "Robot";
+						    labelIn = "true";
+						    break;
+						    case "camera_3":
+						    zone = "Build Zone";
+						    labelIn = "true";
+						    break;
+						    case "camera_4":
+						    zone = "Build Zone";
+						    labelIn = "true";
+						    break;
+						    default:
+						    console.log("Cant handle camera!")
+						    break;
+						    }
                  
-                 gc.addLabel(j.payload, "Zone 1", labelColor, labelIn);
+                 gc.addLabel(j.payload, zone, labelColor, labelIn);
 
                  // Update map 
                  // Make sure that the components have the correct ID
